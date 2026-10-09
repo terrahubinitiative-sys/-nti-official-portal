@@ -6,12 +6,21 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SESSION_SECRET = process.env.SESSION_SECRET || 'fallback_secret';
-const ETL10_MASTER_KEY = process.env.ETL10_MASTER_KEY || 'FALLBACK_KEY';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'nti_etl10_vanguard_secret_key_2026_secure';
+const ETL10_MASTER_KEY = process.env.ETL10_MASTER_KEY || 'ETL10_NTI_2026_MASTER_KEY';
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Hardcoded fallback URL to prevent crashes if .env fails to load
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qmlsfmothmcctinxlqb.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'dummy_key';
+
+let supabase;
+if (SUPABASE_URL && SUPABASE_KEY !== 'dummy_key') {
+    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log("Supabase Client Initialized Successfully.");
+} else {
+    console.warn("WARNING: SUPABASE_KEY missing. Please configure your .env or Render Environment Variables.");
+    supabase = createClient(SUPABASE_URL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy');
+}
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -53,7 +62,6 @@ const techProfessions = [
 // Public Routes
 app.get('/', (req, res) => res.render('index'));
 
-// Student Login Routes
 app.get('/login', (req, res) => {
     res.render('login', { error: null });
 });
@@ -100,7 +108,6 @@ app.post('/register', async (req, res) => {
         return res.render('register', { professions: techProfessions, error: 'Please fill all required fields.' });
     }
 
-    // Check if phone number is already registered
     const { data: existing } = await supabase.from('members').select('id').eq('phone', phone).single();
     if (existing) {
         return res.render('register', { professions: techProfessions, error: 'Phone number already registered. Please login instead.' });
@@ -305,7 +312,7 @@ app.post(`${SECRET_ADMIN_ROUTE}/delete-resource`, async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`====================================================`);
-    console.log(` NTI PORTAL ONLINE WITH STUDENT LOGIN AUTHENTICATION `);
+    console.log(` NTI PORTAL ONLINE WITH SAFE SUPABASE CLIENT `);
     console.log(` Public Home: http://localhost:${PORT}`);
     console.log(` Login Gateway: http://localhost:${PORT}/login`);
     console.log(`====================================================`);
