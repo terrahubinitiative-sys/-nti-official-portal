@@ -1,13 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
 const session = require('express-session');
-const app = express();
+const { createClient } = require('@supabase/supabase-js');
 
+const app = express();
 const PORT = process.env.PORT || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'fallback_secret';
 const ETL10_MASTER_KEY = process.env.ETL10_MASTER_KEY || 'FALLBACK_KEY';
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -21,24 +25,6 @@ app.use(session({
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-
-// PURE JS PERSISTENCE ENGINE (db.json)
-const DB_FILE = path.join(__dirname, 'db.json');
-
-function loadDB() {
-    if (!fs.existsSync(DB_FILE)) {
-        const initialData = { members: [], announcements: [], resources: [] };
-        fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
-        return initialData;
-    }
-    const db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-    if (!db.resources) db.resources = [];
-    return db;
-}
-
-function saveDB(data) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
 
 const englishQuestions = [
     { id: 1, question: "Identify the grammatically correct sentence:", options: ["She don't like reading books.", "She doesn't likes reading books.", "She doesn't like reading books.", "She not like reading books."], answer: 2 },
@@ -67,19 +53,62 @@ const techProfessions = [
 // Public Routes
 app.get('/', (req, res) => res.render('index'));
 
+// Student Login Routes
+app.get('/login', (req, res) => {
+    res.render('login', { error: null });
+});
+
+app.post('/login', async (req, res) => {
+    const { phone, password } = req.body;
+    if (!phone || !password) {
+        return res.render('login', { error: 'Please enter both phone number and password.' });
+    }
+
+    const { data: member } = await supabase.from('members').select('*').eq('phone', phone).single();
+
+    if (!member || member.password !== password) {
+        return res.render('login', { error: 'Invalid Phone Number or Password.' });
+    }
+
+    if (member.isBanned) {
+        return res.send("<h1 style='color:red; text-align:center;'>YOUR ACCOUNT HAS BEEN BANNED BY NTI SYSTEM ADMINS.</h1>");
+    }
+
+    req.session.memberId = member.id;
+
+    if (member.englishStatus === 'PASSED') {
+        return res.redirect(`/member-dashboard?memberId=${member.id}`);
+    } else if (member.cooldownUntil && new Date() < new Date(member.cooldownUntil)) {
+        return res.redirect(`/remedial-hub?memberId=${member.id}`);
+    } else {
+        return res.redirect(`/english-test?memberId=${member.id}`);
+    }
+});
+
+app.get('/logout', (req, res) => {
+    req.session.memberId = null;
+    res.redirect('/login');
+});
+
 app.get('/register', (req, res) => {
     res.render('register', { professions: techProfessions, error: null });
 });
 
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
     const { fullName, phone, location, profession, visionStatement, password } = req.body;
     if (!fullName || !phone || !profession || !password) {
         return res.render('register', { professions: techProfessions, error: 'Please fill all required fields.' });
     }
 
-    const db = loadDB();
-    const memberId = `NTI-MBR-${String(db.members.length + 1).padStart(4, '0')}`;
-    
+    // Check if phone number is already registered
+    const { data: existing } = await supabase.from('members').select('id').eq('phone', phone).single();
+    if (existing) {
+        return res.render('register', { professions: techProfessions, error: 'Phone number already registered. Please login instead.' });
+    }
+
+    const { data: members } = await supabase.from('members').select('id');
+    const memberId = `NTI-MBR-${String((members ? members.length : 0) + 1).padStart(4, '0')}`;
+
     const newMember = {
         id: memberId, fullName, phone, location, profession, visionStatement, password,
         registeredAt: new Date().toISOString(),
@@ -87,16 +116,22 @@ app.post('/register', (req, res) => {
         isBanned: false, cooldownUntil: null
     };
 
-    db.members.push(newMember);
-    saveDB(db);
+    const { error } = await supabase.from('members').insert([newMember]);
 
+    if (error) {
+        console.error("Supabase Insert Error:", error.message);
+        return res.render('register', { professions: techProfessions, error: 'Registration failed in cloud database.' });
+    }
+
+    req.session.memberId = memberId;
     res.redirect(`/english-test?memberId=${memberId}`);
 });
 
-app.get('/english-test', (req, res) => {
-    const memberId = req.query.memberId;
-    const db = loadDB();
-    const member = db.members.find(m => m.id === memberId);
+app.get('/english-test', async (req, res) => {
+    const memberId = req.query.memberId || req.session.memberId;
+    if (!memberId) return res.redirect('/login');
+
+    const { data: member } = await supabase.from('members').select('*').eq('id', memberId).single();
 
     if (!member) return res.redirect('/register');
     if (member.isBanned) return res.send("<h1 style='color:red; text-align:center;'>YOUR ACCOUNT HAS BEEN BANNED BY NTI SYSTEM ADMINS.</h1>");
@@ -110,24 +145,23 @@ app.get('/english-test', (req, res) => {
     res.render('english-test', { member, questions: englishQuestions });
 });
 
-app.post('/submit-test', (req, res) => {
+app.post('/submit-test', async (req, res) => {
     const { memberId, userAnswers, disqualified, tabSwitches } = req.body;
-    const db = loadDB();
-    const member = db.members.find(m => m.id === memberId);
+    const { data: member } = await supabase.from('members').select('*').eq('id', memberId).single();
 
     if (!member) return res.redirect('/register');
 
-    member.attemptsCount = (member.attemptsCount || 0) + 1;
-    member.tabSwitches = parseInt(tabSwitches) || 0;
-
+    const newAttempts = (member.attemptsCount || 0) + 1;
+    const switches = parseInt(tabSwitches) || 0;
     const cooldownDate = new Date();
     cooldownDate.setDate(cooldownDate.getDate() + 10);
 
     if (disqualified === 'true') {
-        member.englishStatus = 'FAILED_CHEATING';
-        member.score = 0;
-        member.cooldownUntil = cooldownDate.toISOString();
-        saveDB(db);
+        await supabase.from('members').update({
+            englishStatus: 'FAILED_CHEATING', score: 0, tabSwitches: switches,
+            attemptsCount: newAttempts, cooldownUntil: cooldownDate.toISOString()
+        }).eq('id', memberId);
+
         return res.redirect(`/remedial-hub?memberId=${memberId}`);
     }
 
@@ -141,56 +175,67 @@ app.post('/submit-test', (req, res) => {
     });
 
     const percentage = Math.round((correctCount / englishQuestions.length) * 100);
-    member.score = percentage;
 
     if (percentage >= 80) {
-        member.englishStatus = 'PASSED';
-        member.cooldownUntil = null;
+        await supabase.from('members').update({
+            englishStatus: 'PASSED', score: percentage, tabSwitches: switches,
+            attemptsCount: newAttempts, cooldownUntil: null
+        }).eq('id', memberId);
     } else {
-        member.englishStatus = 'REMEDIAL_REQUIRED';
-        member.cooldownUntil = cooldownDate.toISOString();
+        await supabase.from('members').update({
+            englishStatus: 'REMEDIAL_REQUIRED', score: percentage, tabSwitches: switches,
+            attemptsCount: newAttempts, cooldownUntil: cooldownDate.toISOString()
+        }).eq('id', memberId);
     }
 
-    saveDB(db);
     res.redirect(percentage >= 80 ? `/member-dashboard?memberId=${memberId}` : `/remedial-hub?memberId=${memberId}`);
 });
 
-app.get('/remedial-hub', (req, res) => {
-    const memberId = req.query.memberId;
-    const db = loadDB();
-    const member = db.members.find(m => m.id === memberId);
+app.get('/remedial-hub', async (req, res) => {
+    const memberId = req.query.memberId || req.session.memberId;
+    if (!memberId) return res.redirect('/login');
+
+    const { data: member } = await supabase.from('members').select('*').eq('id', memberId).single();
     if (!member) return res.redirect('/register');
     res.render('remedial-hub', { member });
 });
 
-app.get('/member-dashboard', (req, res) => {
-    const memberId = req.query.memberId;
-    const db = loadDB();
-    const member = db.members.find(m => m.id === memberId);
-    if (!member) return res.redirect('/register');
+app.get('/member-dashboard', async (req, res) => {
+    const memberId = req.query.memberId || req.session.memberId;
+    if (!memberId) return res.redirect('/login');
+
+    const { data: member } = await supabase.from('members').select('*').eq('id', memberId).single();
+    if (!member) return res.redirect('/login');
     if (member.isBanned) return res.send("<h1 style='color:red; text-align:center;'>YOUR ACCOUNT HAS BEEN BANNED BY NTI SYSTEM ADMINS.</h1>");
+
+    const { data: allMembers } = await supabase.from('members').select('*');
+    const { data: announcements } = await supabase.from('announcements').select('*').order('id', { ascending: false });
+    const { data: resources } = await supabase.from('resources').select('*');
 
     res.render('member-dashboard', { 
         member, 
-        allMembers: db.members, 
-        announcements: db.announcements,
-        resources: db.resources 
+        allMembers: allMembers || [], 
+        announcements: announcements || [],
+        resources: resources || [] 
     });
 });
 
 // Secret Admin Panel
 const SECRET_ADMIN_ROUTE = "/etl10-vanguard-core-access-2026-secure";
 
-app.get(SECRET_ADMIN_ROUTE, (req, res) => {
+app.get(SECRET_ADMIN_ROUTE, async (req, res) => {
     if (!req.session.isAdmin) {
         return res.render('admin-login', { secretRoute: SECRET_ADMIN_ROUTE, error: null });
     }
-    const db = loadDB();
+    const { data: members } = await supabase.from('members').select('*');
+    const { data: announcements } = await supabase.from('announcements').select('*').order('id', { ascending: false });
+    const { data: resources } = await supabase.from('resources').select('*');
+
     res.render('admin-panel', { 
         secretRoute: SECRET_ADMIN_ROUTE, 
-        members: db.members, 
-        announcements: db.announcements,
-        resources: db.resources 
+        members: members || [], 
+        announcements: announcements || [],
+        resources: resources || [] 
     });
 });
 
@@ -208,84 +253,60 @@ app.get(`${SECRET_ADMIN_ROUTE}/logout`, (req, res) => {
     res.redirect('/');
 });
 
-app.post(`${SECRET_ADMIN_ROUTE}/toggle-ban`, (req, res) => {
+app.post(`${SECRET_ADMIN_ROUTE}/toggle-ban`, async (req, res) => {
     if (!req.session.isAdmin) return res.redirect(SECRET_ADMIN_ROUTE);
     const { memberId } = req.body;
-    const db = loadDB();
-    const member = db.members.find(m => m.id === memberId);
-    if (member) member.isBanned = !member.isBanned;
-    saveDB(db);
-    res.redirect(SECRET_ADMIN_ROUTE);
-});
-
-app.post(`${SECRET_ADMIN_ROUTE}/reset-cooldown`, (req, res) => {
-    if (!req.session.isAdmin) return res.redirect(SECRET_ADMIN_ROUTE);
-    const { memberId } = req.body;
-    const db = loadDB();
-    const member = db.members.find(m => m.id === memberId);
+    const { data: member } = await supabase.from('members').select('isBanned').eq('id', memberId).single();
     if (member) {
-        member.cooldownUntil = null;
-        member.englishStatus = 'PENDING';
+        await supabase.from('members').update({ isBanned: !member.isBanned }).eq('id', memberId);
     }
-    saveDB(db);
     res.redirect(SECRET_ADMIN_ROUTE);
 });
 
-app.post(`${SECRET_ADMIN_ROUTE}/broadcast`, (req, res) => {
+app.post(`${SECRET_ADMIN_ROUTE}/reset-cooldown`, async (req, res) => {
+    if (!req.session.isAdmin) return res.redirect(SECRET_ADMIN_ROUTE);
+    const { memberId } = req.body;
+    await supabase.from('members').update({ cooldownUntil: null, englishStatus: 'PENDING' }).eq('id', memberId);
+    res.redirect(SECRET_ADMIN_ROUTE);
+});
+
+app.post(`${SECRET_ADMIN_ROUTE}/broadcast`, async (req, res) => {
     if (!req.session.isAdmin) return res.redirect(SECRET_ADMIN_ROUTE);
     const { title, content } = req.body;
-    const db = loadDB();
+    const date = new Date().toISOString().split('T')[0];
     if (title && content) {
-        db.announcements.unshift({
-            id: db.announcements.length + 1,
-            date: new Date().toISOString().split('T')[0],
-            title, content
-        });
-        saveDB(db);
+        await supabase.from('announcements').insert([{ date, title, content }]);
     }
     res.redirect(SECRET_ADMIN_ROUTE);
 });
 
-app.post(`${SECRET_ADMIN_ROUTE}/add-resource`, (req, res) => {
+app.post(`${SECRET_ADMIN_ROUTE}/add-resource`, async (req, res) => {
     if (!req.session.isAdmin) return res.redirect(SECRET_ADMIN_ROUTE);
     const { title, url } = req.body;
-    const db = loadDB();
     if (title && url) {
-        db.resources.unshift({
-            id: `RES-${Date.now()}`,
-            title, url
-        });
-        saveDB(db);
+        await supabase.from('resources').insert([{ id: `RES-${Date.now()}`, title, url }]);
     }
     res.redirect(SECRET_ADMIN_ROUTE);
 });
 
-app.post(`${SECRET_ADMIN_ROUTE}/edit-resource`, (req, res) => {
+app.post(`${SECRET_ADMIN_ROUTE}/edit-resource`, async (req, res) => {
     if (!req.session.isAdmin) return res.redirect(SECRET_ADMIN_ROUTE);
     const { id, title, url } = req.body;
-    const db = loadDB();
-    const resItem = db.resources.find(r => r.id === id);
-    if (resItem) {
-        resItem.title = title;
-        resItem.url = url;
-        saveDB(db);
-    }
+    await supabase.from('resources').update({ title, url }).eq('id', id);
     res.redirect(SECRET_ADMIN_ROUTE);
 });
 
-app.post(`${SECRET_ADMIN_ROUTE}/delete-resource`, (req, res) => {
+app.post(`${SECRET_ADMIN_ROUTE}/delete-resource`, async (req, res) => {
     if (!req.session.isAdmin) return res.redirect(SECRET_ADMIN_ROUTE);
     const { id } = req.body;
-    const db = loadDB();
-    db.resources = db.resources.filter(r => r.id !== id);
-    saveDB(db);
+    await supabase.from('resources').delete().eq('id', id);
     res.redirect(SECRET_ADMIN_ROUTE);
 });
 
 app.listen(PORT, () => {
     console.log(`====================================================`);
-    console.log(` NTI PORTAL ONLINE (ENV SECURED)`);
+    console.log(` NTI PORTAL ONLINE WITH STUDENT LOGIN AUTHENTICATION `);
     console.log(` Public Home: http://localhost:${PORT}`);
-    console.log(` Secret Admin: http://localhost:${PORT}${SECRET_ADMIN_ROUTE}`);
+    console.log(` Login Gateway: http://localhost:${PORT}/login`);
     console.log(`====================================================`);
 });

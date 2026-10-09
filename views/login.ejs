@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Login • NTI Portal</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <img src="/images/nti.jpg" alt="NTI Logo" class="nti-logo">
+            <div class="org-title">
+                <h1>NTI Member Login</h1>
+                <span>Pioneer Tech Portal</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="form-container" style="max-width: 450px;">
+            <div class="form-header">
+                <h2>Welcome Back Member</h2>
+                <p>Log in using your phone number and password to access your dashboard directly.</p>
+            </div>
+
+            <% if (error) { %>
+                <div class="error-banner"><%= error %></div>
+            <% } %>
+
+            <form action="/login" method="POST">
+                <div class="form-group">
+                    <label for="phone">Registered Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="e.g. 0712345678" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Your Account Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="submit-btn">Login to Dashboard</button>
+            </form>
+
+            <p style="text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: #AAA;">
+                New to NTI? <a href="/register" style="color: var(--text-gold); font-weight: bold; text-decoration: none;">Register Here</a>
+            </p>
+        </div>
+    </div>
+
+    <footer>NAVAKHOLO TERRAHUB INITIATIVE • BUILT IN TERMUX • 2026</footer>
+
+</body>
+</html>
