@@ -127,7 +127,7 @@ app.post('/register', async (req, res) => {
 
     if (error) {
         console.error("Supabase Insert Error:", error.message);
-        return res.render('register', { professions: techProfessions, error: 'Registration failed in cloud database.' });
+        return res.render('register', { professions: techProfessions, error: `Cloud Error: ${error ? error.message : 'Unknown Database Error'}` });
     }
 
     req.session.memberId = memberId;
