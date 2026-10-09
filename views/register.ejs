@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pioneer Recruitment • Navakholo TerraHub Initiative</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <img src="/images/nti.jpg" alt="NTI Logo" class="nti-logo">
+            <div class="org-title">
+                <h1>Navakholo TerraHub</h1>
+                <span>Execution Over Excuses • Pioneer Recruitment</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Join The Pioneer Team</h2>
+                <p>Submit your application for admission into the NTI Ecosystem.</p>
+            </div>
+
+            <% if (error) { %>
+                <div class="error-banner"><%= error %></div>
+            <% } %>
+
+            <form action="/register" method="POST">
+                
+                <!-- Section 1: Personal Details -->
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" class="form-control" placeholder="e.g. Wanjala Barasa" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone / WhatsApp Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="e.g. 0712345678" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location / Sub-County</label>
+                    <input type="text" id="location" name="location" class="form-control" placeholder="e.g. Navakholo, Kakamega" required>
+                </div>
+
+                <!-- Section 2: Profession Selection from Poster -->
+                <div class="form-group">
+                    <label for="profession">Select Your Desired Tech Profession</label>
+                    <select id="profession" name="profession" class="form-control" required>
+                        <option value="" disabled selected>-- Choose Profession from NTI Poster --</option>
+                        <% professions.forEach(prof => { %>
+                            <option value="<%= prof %>"><%= prof %></option>
+                        <% }); %>
+                    </select>
+                </div>
+
+                <!-- Section 3: Capability & Discipline Check -->
+                <div class="form-group">
+                    <label>Do you have an Android Smartphone ready for Termux?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="hasSmartphone" value="yes" checked> Yes, ready
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="hasSmartphone" value="no"> No
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Are you ready for daily study blocks (10 AM–4 PM & 8 PM–10 PM)?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="commitTime" value="yes" checked> Yes, committed
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="commitTime" value="no"> No
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="visionStatement">Why do you want to join NTI?</label>
+                    <textarea id="visionStatement" name="visionStatement" class="form-control" placeholder="Briefly state your drive, goals, and determination to learn..." required></textarea>
+                </div>
+
+                <!-- Section 4: Portal Security Passcode -->
+                <div class="form-group">
+                    <label for="password">Create Security Passcode / Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter a secure passcode" required>
+                </div>
+
+                <button type="submit" class="submit-btn">Submit Application</button>
+
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        NAVAKHOLO TERRAHUB INITIATIVE • BUILT IN TERMUX • 2026
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "short_name": "NTI Portal",
+  "name": "Navakholo TerraHub Initiative Member Portal",
+  "icons": [
+    {
+      "src": "/images/nti.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/images/nti.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/member-dashboard",
+  "background_color": "#000000",
+  "theme_color": "#D4AF37",
+  "display": "standalone",
+  "orientation": "portrait"
+}

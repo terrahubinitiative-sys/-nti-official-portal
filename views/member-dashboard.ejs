@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Dashboard • NTI System</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .member-badge {
+            display: inline-block;
+            background: #2ECC71;
+            color: #000;
+            font-weight: bold;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        .whatsapp-btn {
+            display: block;
+            width: 100%;
+            max-width: 450px;
+            margin: 2rem auto 0 auto;
+            padding: 1.1rem;
+            background: #25D366;
+            color: #FFFFFF;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Slide-Out Hamburger Navigation Drawer -->
+    <div id="navDrawer" class="nav-drawer">
+        <div class="drawer-header">
+            <h3>NTI Knowledge Portal</h3>
+            <button class="close-drawer-btn" onclick="toggleDrawer()">&times;</button>
+        </div>
+        <p style="color:#888; font-size:0.8rem; margin-bottom: 1rem;">Official Resources & External Links:</p>
+
+        <% if (resources && resources.length > 0) { %>
+            <% resources.forEach(res => { %>
+                <a href="<%= res.url %>" target="_blank" class="resource-link-btn">
+                    🔗 <strong><%= res.title %></strong>
+                </a>
+            <% }); %>
+        <% } else { %>
+            <p style="color:#666; font-size:0.85rem;">No external links uploaded yet.</p>
+        <% } %>
+    </div>
+
+    <!-- Header with Top-Right Hamburger Button -->
+    <header>
+        <div class="header-left">
+            <img src="/images/nti.jpg" alt="NTI Logo" class="nti-logo">
+            <div class="org-title">
+                <h1>NTI Member Portal</h1>
+                <span>Welcome, <%= member.fullName %></span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button class="hamburger-btn" onclick="toggleDrawer()" title="Open Menu">&#9776;</button>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- Add to Home Screen Banner Prompt -->
+        <div class="pwa-banner" id="pwaBanner">
+            <h3>📲 Add NTI App to Home Screen</h3>
+            <p>Save this page as an app shortcut on your phone screen so you can log in directly next time without doing the exam again!</p>
+            <button class="install-btn" id="installPwaBtn" onclick="triggerPwaInstall()">Add Shortcut to Home Screen</button>
+        </div>
+
+        <!-- Verified Member Welcome Banner -->
+        <div class="card" style="border-color: #2ECC71; margin-bottom: 2.5rem;">
+            <span class="member-badge">ENGLISH CERTIFIED</span>
+            <h2 style="color: var(--text-gold); font-family: 'Cinzel', serif; margin: 0.5rem 0;">Pioneer Tech Member Verified</h2>
+            <p style="color: #AAA;">Track: <strong><%= member.profession %></strong> | Location: <strong><%= member.location %></strong></p>
+        </div>
+
+        <!-- Announcements Section -->
+        <% if (announcements && announcements.length > 0) { %>
+            <h3 class="section-title">Official Broadcasts</h3>
+            <% announcements.forEach(anc => { %>
+                <div class="card" style="border-left: 4px solid var(--text-gold); margin-bottom: 1rem;">
+                    <span style="color: var(--text-muted); font-size: 0.75rem;"><%= anc.date %></span>
+                    <h3 style="margin: 0.3rem 0;"><%= anc.title %></h3>
+                    <p><%= anc.content %></p>
+                </div>
+            <% }); %>
+        <% } %>
+
+        <!-- Full NTI Blueprint Section -->
+        <h3 class="section-title" style="margin-top: 2.5rem;">Full NTI System Blueprint</h3>
+        <div class="grid">
+            <div class="card">
+                <h3>Phase 1: Smartphone Classroom</h3>
+                <p>Utilize Termux, Pydroid 3, and GitHub to master foundational logic and code execution remotely.</p>
+            </div>
+            <div class="card">
+                <h3>Phase 2: Super Laptop Evolution</h3>
+                <p>Transitioning into high-performance workstations through treasury capital and revenue generation.</p>
+            </div>
+            <div class="card">
+                <h3>Phase 3: Navakholo Silicon Valley</h3>
+                <p>Creating regional tech hubs, remote freelancing powerhouse, and sustainable local infrastructure.</p>
+            </div>
+        </div>
+
+        <!-- All Active Members Directory -->
+        <h3 class="section-title" style="margin-top: 3.5rem;">Active Registered NTI Members</h3>
+        <div class="grid">
+            <% allMembers.forEach(m => { %>
+                <div class="card">
+                    <span style="color: var(--text-gold); font-weight: bold;"><%= m.id %></span>
+                    <h3 style="margin: 0.4rem 0;"><%= m.fullName %></h3>
+                    <p>Track: <%= m.profession %></p>
+                    <p style="font-size:0.8rem; color: <%= m.englishStatus === 'PASSED' ? '#2ECC71' : '#E74C3C' %>;">
+                        Status: <%= m.englishStatus %>
+                    </p>
+                </div>
+            <% }); %>
+        </div>
+
+        <!-- WhatsApp Community Link -->
+        <a href="https://chat.whatsapp.com/D1E3ZCdMXzR8cAPuRwyQE5" target="_blank" class="whatsapp-btn">
+            Join Official NTI WhatsApp Group
+        </a>
+
+    </div>
+
+    <script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('navDrawer');
+            drawer.classList.toggle('open');
+        }
+
+        // Progressive Web App (PWA) Direct Add-to-HomeScreen Engine
+        let deferredPrompt;
+        const pwaBanner = document.getElementById('pwaBanner');
+        const installBtn = document.getElementById('installPwaBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            pwaBanner.style.display = 'flex';
+        });
+
+        function triggerPwaInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User added NTI to home screen');
+                        pwaBanner.style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Fallback instructions for manual Chrome menu action
+                alert("To add NTI shortcut manually:\n1. Tap Chrome's 3 dots (⋮) menu at the top right.\n2. Tap 'Add to Home screen' or 'Install app'.");
+            }
+        }
+    </script>
+
+    <footer>NAVAKHOLO TERRAHUB INITIATIVE • BUILT IN TERMUX • 2026</footer>
+
+</body>
+</html>

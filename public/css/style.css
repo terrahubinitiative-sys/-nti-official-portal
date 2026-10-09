@@ -1,0 +1,448 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+    --bg-dark: #000000;
+    --header-bg: #050505;
+    --card-bg: #0D0D0D;
+    --text-gold: #D4AF37;
+    --text-light: #CCCCCC;
+    --text-muted: #888888;
+    --border-color: #1A1A1A;
+    --gradient-glow: linear-gradient(90deg, #FF4500 0%, #FFA500 50%, #FFD700 100%);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow-x: hidden;
+}
+
+/* Minimal Clean Header */
+header {
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.nti-logo {
+    height: 44px;
+    width: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--text-gold);
+    object-fit: cover;
+}
+
+.org-title h1 {
+    margin: 0;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    letter-spacing: 1.5px;
+    color: var(--text-gold);
+    text-transform: uppercase;
+}
+
+.org-title span {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    display: block;
+    margin-top: 2px;
+}
+
+/* Main Hero Section */
+.hero {
+    text-align: center;
+    padding: 3rem 1.2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-gold);
+    letter-spacing: 1.5px;
+    line-height: 1.35;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+}
+
+.hero p.description {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #AAAAAA;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.hero-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border-color);
+    margin: 2rem 0;
+}
+
+.architect-subtitle {
+    font-family: 'Cinzel', serif;
+    color: var(--text-gold);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+}
+
+.architect-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-style: italic;
+    color: #FFFFFF;
+    margin-bottom: 2.5rem;
+}
+
+/* Fixed Responsive CTA Button */
+.cta-btn-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 0 0.5rem;
+}
+
+.cta-btn {
+    display: inline-block;
+    width: 100%;
+    max-width: 340px;
+    padding: 0.95rem 1.5rem;
+    background: var(--gradient-glow);
+    color: #FFFFFF;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-decoration: none;
+    text-transform: uppercase;
+    border-radius: 30px;
+    box-shadow: 0 4px 20px rgba(255, 69, 0, 0.4);
+    transition: transform 0.2s ease;
+    border: none;
+    text-align: center;
+}
+
+.cta-btn:active {
+    transform: scale(0.97);
+}
+
+/* Content Sections */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.2rem;
+}
+
+.section-title {
+    font-family: 'Cinzel', serif;
+    color: var(--text-gold);
+    text-align: center;
+    font-size: 1.25rem;
+    letter-spacing: 1.5px;
+    margin-bottom: 1.8rem;
+    text-transform: uppercase;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.2rem;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.card h3 {
+    font-family: 'Cinzel', serif;
+    color: var(--text-gold);
+    margin-top: 0;
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+
+.card p {
+    color: #888888;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+/* Registration Form Specific Styles */
+.form-container {
+    max-width: 650px;
+    margin: 2rem auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.form-header h2 {
+    font-family: 'Cinzel', serif;
+    color: var(--text-gold);
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-header p {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-gold);
+    font-size: 0.85rem;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: #050505;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+}
+
+.form-control:focus {
+    border-color: var(--text-gold);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+}
+
+select.form-control option {
+    background: #0D0D0D;
+    color: #FFF;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.radio-group {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background: var(--gradient-glow);
+    color: #FFFFFF;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 2px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 4px 15px rgba(255, 69, 0, 0.3);
+    margin-top: 1rem;
+}
+
+.error-banner {
+    background: rgba(231, 76, 60, 0.15);
+    border: 1px solid #E74C3C;
+    color: #E74C3C;
+    padding: 0.8rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* Slide-out Hamburger Drawer for Qualified Members */
+.nav-drawer {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 300px;
+    height: 100%;
+    background: #0A0A0A;
+    border-left: 2px solid var(--text-gold);
+    z-index: 9999;
+    padding: 2rem 1.2rem;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.8);
+    transition: right 0.3s ease;
+    overflow-y: auto;
+}
+
+.nav-drawer.open {
+    right: 0;
+}
+
+.drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.drawer-header h3 {
+    font-family: 'Cinzel', serif;
+    color: var(--text-gold);
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.close-drawer-btn {
+    background: none;
+    border: none;
+    color: #FFF;
+    font-size: 1.8rem;
+    cursor: pointer;
+}
+
+.resource-link-btn {
+    display: block;
+    width: 100%;
+    padding: 0.9rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 0.88rem;
+    margin-bottom: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.resource-link-btn:hover {
+    border-color: var(--text-gold);
+    color: var(--text-gold);
+    background: #111;
+}
+
+/* Top Right Hamburger Button Alignment Fix */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+}
+
+.hamburger-btn {
+    font-size: 1.4rem;
+    color: var(--text-gold);
+    background: #0A0A0A;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hamburger-btn:hover {
+    border-color: var(--text-gold);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+/* Add to Home Screen Banner & Alert Box */
+.pwa-banner {
+    background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 100%);
+    border: 2px solid var(--text-gold);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.pwa-banner h3 {
+    margin: 0;
+    color: var(--text-gold);
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+}
+
+.pwa-banner p {
+    margin: 0;
+    color: #CCCCCC;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.install-btn {
+    background: var(--gradient-glow);
+    color: #FFFFFF;
+    font-family: 'Cinzel', serif;
+    font-weight: bold;
+    border: none;
+    padding: 0.8rem 1.8rem;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+}

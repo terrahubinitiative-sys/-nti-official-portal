@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30-Min Gateway Assessment • NTI</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .test-header {
+            position: sticky;
+            top: 70px;
+            background: #0A0A0A;
+            border-bottom: 2px solid var(--text-gold);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        .timer-box {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FF4500;
+            font-family: monospace;
+        }
+        .question-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-title {
+            color: var(--text-gold);
+            font-size: 1.05rem;
+            margin-bottom: 1rem;
+        }
+        .option-label {
+            display: block;
+            padding: 0.8rem 1rem;
+            background: #050505;
+            border: 1px solid #222;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .option-label:hover {
+            border-color: var(--text-gold);
+        }
+
+        /* Pure Custom NTI Dark-Gold Modal (No White Browser Alerts) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-box {
+            background: #0D0D0D;
+            border: 2px solid var(--text-gold);
+            border-radius: 15px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+        }
+
+        .modal-box h2 {
+            font-family: 'Cinzel', serif;
+            color: #FF4500;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        .modal-box p {
+            color: #CCCCCC;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        .modal-btn {
+            background: var(--gradient-glow);
+            color: #FFF;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Custom Dark Warning Modal -->
+    <div id="warningModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>⚠️ SECURITY VIOLATION ⚠️</h2>
+            <p id="warningText">Tab switching detected! Please remain on the assessment screen.</p>
+            <p style="color: var(--text-gold); font-weight: bold;" id="strikeText">Warning 1 of 2</p>
+            <button class="modal-btn" onclick="closeModal()">Return to Assessment</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <img src="/images/nti.jpg" alt="NTI Logo" class="nti-logo">
+            <div class="org-title">
+                <h1>English Gateway Test</h1>
+                <span>Candidate: <%= member.fullName %> (<%= member.id %>)</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="test-header container">
+        <span style="color: var(--text-gold); font-weight: bold;">Passmark: 80% (12/15)</span>
+        <div class="timer-box">Time Left: <span id="timeDisplay">30:00</span></div>
+    </div>
+
+    <div class="container">
+        <form id="assessmentForm" action="/submit-test" method="POST">
+            <input type="hidden" name="memberId" value="<%= member.id %>">
+            <input type="hidden" name="userAnswers" id="userAnswersInput">
+            <input type="hidden" name="disqualified" id="disqualifiedInput" value="false">
+
+            <% questions.forEach((q, idx) => { %>
+                <div class="question-card">
+                    <div class="question-title">Question <%= idx + 1 %> of 15: <%= q.question %></div>
+                    <% q.options.forEach((opt, optIdx) => { %>
+                        <label class="option-label">
+                            <input type="radio" name="q_<%= q.id %>" value="<%= optIdx %>" onchange="saveAnswer('<%= q.id %>', '<%= optIdx %>')">
+                            <%= opt %>
+                        </label>
+                    <% }); %>
+                </div>
+            <% }); %>
+
+            <button type="button" class="cta-btn" onclick="submitAssessment()" style="cursor: pointer; width:100%; max-width:100%;">Submit Examination & View Score</button>
+        </form>
+    </div>
+
+    <script>
+        // 30-Minute Timer
+        let totalSeconds = 30 * 60;
+        const timeDisplay = document.getElementById('timeDisplay');
+
+        const timerInterval = setInterval(() => {
+            totalSeconds--;
+            let mins = Math.floor(totalSeconds / 60);
+            let secs = totalSeconds % 60;
+            timeDisplay.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+            if (totalSeconds <= 0) {
+                clearInterval(timerInterval);
+                submitAssessment();
+            }
+        }, 1000);
+
+        // State Store
+        const answersState = {};
+        function saveAnswer(questionId, optionIdx) {
+            answersState[questionId] = optionIdx;
+        }
+
+        // Strict Anti-Cheating Engine (Zero Native Alerts)
+        let strikeCount = 0;
+        const warningModal = document.getElementById('warningModal');
+        const warningText = document.getElementById('warningText');
+        const strikeText = document.getElementById('strikeText');
+
+        function handleTabSwitch() {
+            strikeCount++;
+
+            if (strikeCount >= 3) {
+                // Direct Disqualification on 3rd violation: Zero Score, Auto-Submit
+                document.getElementById('disqualifiedInput').value = 'true';
+                document.getElementById('userAnswersInput').value = JSON.stringify(answersState);
+                document.getElementById('assessmentForm').submit();
+            } else {
+                // Custom Modal for Strike 1 and Strike 2
+                warningText.textContent = "Switching tabs or leaving the screen during assessment is strictly monitored.";
+                strikeText.textContent = `Warning Strike ${strikeCount} of 2. Next violation results in immediate disqualification!`;
+                warningModal.style.display = 'flex';
+            }
+        }
+
+        function closeModal() {
+            warningModal.style.display = 'none';
+        }
+
+        // Detect screen leaving without browser popups
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) handleTabSwitch();
+        });
+
+        window.addEventListener('blur', () => {
+            handleTabSwitch();
+        });
+
+        function submitAssessment() {
+            document.getElementById('userAnswersInput').value = JSON.stringify(answersState);
+            document.getElementById('assessmentForm').submit();
+        }
+    </script>
+
+</body>
+</html>

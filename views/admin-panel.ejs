@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETL10 System Controller Panel • NTI</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #0D0D0D;
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+        th, td {
+            padding: 0.8rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #1A1A1A;
+        }
+        th {
+            background: #050505;
+            color: var(--text-gold);
+            font-family: 'Cinzel', serif;
+        }
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .ban-btn { background: #E74C3C; color: #FFF; }
+        .unban-btn { background: #2ECC71; color: #000; }
+        .reset-btn { background: #F39C12; color: #000; }
+        .edit-btn { background: #3498DB; color: #FFF; }
+        .delete-btn { background: #E74C3C; color: #FFF; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <img src="/images/nti.jpg" alt="NTI Logo" class="nti-logo">
+            <div class="org-title">
+                <h1>ETL10 Master Command Center</h1>
+                <span>System Admin Mode</span>
+            </div>
+        </div>
+        <div>
+            <a href="<%= secretRoute %>/logout" style="color: #E74C3C; font-weight: bold; text-decoration: none;">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- System Stats Summary -->
+        <div class="grid" style="margin-bottom: 2rem;">
+            <div class="card">
+                <h3>Total Registrations</h3>
+                <p style="font-size: 1.8rem; color: var(--text-gold); font-weight: bold;"><%= members.length %></p>
+            </div>
+            <div class="card">
+                <h3>Passed Members</h3>
+                <p style="font-size: 1.8rem; color: #2ECC71; font-weight: bold;">
+                    <%= members.filter(m => m.englishStatus === 'PASSED').length %>
+                </p>
+            </div>
+            <div class="card">
+                <h3>Active Resources</h3>
+                <p style="font-size: 1.8rem; color: #3498DB; font-weight: bold;"><%= resources ? resources.length : 0 %></p>
+            </div>
+        </div>
+
+        <!-- Manage External Hamburger Links -->
+        <div class="card" style="margin-bottom: 2.5rem; border-color: var(--text-gold);">
+            <h3 style="color: var(--text-gold); font-family: 'Cinzel', serif;">Add External Resource Link (Hamburger Menu)</h3>
+            <form action="<%= secretRoute %>/add-resource" method="POST" style="margin-top: 1rem;">
+                <div class="form-group">
+                    <label>Topic / Title</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Read the Full History of NTI" required>
+                </div>
+                <div class="form-group">
+                    <label>URL Link</label>
+                    <input type="url" name="url" class="form-control" placeholder="e.g. https://nti-com.onrender.com/history" required>
+                </div>
+                <button type="submit" class="submit-btn" style="max-width: 250px;">Save Resource Link</button>
+            </form>
+
+            <h4 style="color:#AAA; margin-top: 2rem; border-top: 1px solid #222; padding-top: 1rem;">Uploaded Resources Directory</h4>
+            <% if (resources && resources.length > 0) { %>
+                <% resources.forEach(res => { %>
+                    <div style="background: #050505; border: 1px solid #222; border-radius: 8px; padding: 1rem; margin-bottom: 0.8rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <strong style="color: var(--text-gold);"><%= res.title %></strong><br>
+                            <a href="<%= res.url %>" target="_blank" style="color: #3498DB; font-size: 0.8rem;"><%= res.url %></a>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <!-- Inline Edit Form -->
+                            <button onclick="editResourcePrompt('<%= res.id %>', '<%= res.title %>', '<%= res.url %>')" class="action-btn edit-btn">Edit</button>
+                            
+                            <form action="<%= secretRoute %>/delete-resource" method="POST" style="display:inline;">
+                                <input type="hidden" name="id" value="<%= res.id %>">
+                                <button type="submit" class="action-btn delete-btn">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p style="color:#666; font-size:0.85rem;">No external resources added yet.</p>
+            <% } %>
+        </div>
+
+        <!-- Hidden Form for JavaScript Edit Prompt -->
+        <form id="editResourceForm" action="<%= secretRoute %>/edit-resource" method="POST" style="display:none;">
+            <input type="hidden" name="id" id="editResId">
+            <input type="hidden" name="title" id="editResTitle">
+            <input type="hidden" name="url" id="editResUrl">
+        </form>
+
+        <!-- Broadcast Announcement Form -->
+        <div class="card" style="margin-bottom: 2.5rem;">
+            <h3 style="color: var(--text-gold); font-family: 'Cinzel', serif;">Broadcast Announcement</h3>
+            <form action="<%= secretRoute %>/broadcast" method="POST" style="margin-top: 1rem;">
+                <div class="form-group">
+                    <input type="text" name="title" class="form-control" placeholder="Announcement Title" required>
+                </div>
+                <div class="form-group">
+                    <textarea name="content" class="form-control" placeholder="Write announcement message..." required></textarea>
+                </div>
+                <button type="submit" class="submit-btn" style="max-width: 250px;">Publish Broadcast</button>
+            </form>
+        </div>
+
+        <!-- Student Audit & Control Table -->
+        <h3 class="section-title">Student Audit Logs & Controls</h3>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID & Name</th>
+                        <th>Phone & Location</th>
+                        <th>Profession</th>
+                        <th>Score</th>
+                        <th>Tab Switches</th>
+                        <th>Attempts</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (members.length === 0) { %>
+                        <tr><td colspan="8" style="text-align:center; color:#888;">No registered students yet.</td></tr>
+                    <% } %>
+                    <% members.forEach(m => { %>
+                        <tr style="<%= m.isBanned ? 'opacity: 0.5; background: rgba(231,76,60,0.1);' : '' %>">
+                            <td>
+                                <strong><%= m.id %></strong><br>
+                                <span style="color:#FFF;"><%= m.fullName %></span>
+                            </td>
+                            <td><%= m.phone %><br><span style="color:#888;"><%= m.location %></span></td>
+                            <td><%= m.profession %></td>
+                            <td style="font-weight:bold; color: <%= m.score >= 80 ? '#2ECC71' : '#E74C3C' %>;"><%= m.score %>%</td>
+                            <td style="color: <%= m.tabSwitches > 0 ? '#E74C3C' : '#2ECC71' %>; font-weight:bold;"><%= m.tabSwitches %> Switches</td>
+                            <td><%= m.attemptsCount %></td>
+                            <td>
+                                <% if (m.isBanned) { %>
+                                    <span style="color:#E74C3C; font-weight:bold;">BANNED</span>
+                                <% } else if (m.englishStatus === 'PASSED') { %>
+                                    <span style="color:#2ECC71; font-weight:bold;">PASSED</span>
+                                <% } else { %>
+                                    <span style="color:#F39C12; font-weight:bold;">REMEDIAL</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <form action="<%= secretRoute %>/toggle-ban" method="POST" style="display:inline;">
+                                    <input type="hidden" name="memberId" value="<%= m.id %>">
+                                    <button type="submit" class="action-btn <%= m.isBanned ? 'unban-btn' : 'ban-btn' %>">
+                                        <%= m.isBanned ? 'UNBAN' : 'BAN' %>
+                                    </button>
+                                </form>
+
+                                <form action="<%= secretRoute %>/reset-cooldown" method="POST" style="display:inline; margin-left:0.3rem;">
+                                    <input type="hidden" name="memberId" value="<%= m.id %>">
+                                    <button type="submit" class="action-btn reset-btn" title="Reset Lockdown">RESET</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" style="background: #080808; border-bottom: 2px solid #222; font-size: 0.8rem; color: #AAA;">
+                                <strong>Vision Statement:</strong> "<%= m.visionStatement %>"
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        function editResourcePrompt(id, currentTitle, currentUrl) {
+            const newTitle = prompt("Edit Resource Topic / Title:", currentTitle);
+            if (newTitle === null) return;
+            const newUrl = prompt("Edit Resource URL Link:", currentUrl);
+            if (newUrl === null) return;
+
+            document.getElementById('editResId').value = id;
+            document.getElementById('editResTitle').value = newTitle;
+            document.getElementById('editResUrl').value = newUrl;
+            document.getElementById('editResourceForm').submit();
+        }
+    </script>
+
+    <footer>NAVAKHOLO TERRAHUB INITIATIVE • BUILT IN TERMUX • 2026</footer>
+
+</body>
+</html>

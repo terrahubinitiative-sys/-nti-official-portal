@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10-Day Remedial Hub • NTI</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .countdown-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .time-card {
+            background: #0D0D0D;
+            border: 2px solid var(--text-gold);
+            border-radius: 10px;
+            padding: 1rem;
+            min-width: 75px;
+            text-align: center;
+        }
+        .time-card .number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #FF4500;
+            font-family: monospace;
+        }
+        .time-card .label {
+            font-size: 0.75rem;
+            color: #888888;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <img src="/images/nti.jpg" alt="NTI Logo" class="nti-logo">
+            <div class="org-title">
+                <h1>10-Day English Remedial Hub</h1>
+                <span>Candidate: <%= member.fullName %> (<%= member.id %>)</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card" style="text-align: center; padding: 2.5rem;">
+            <h2 style="color: #E74C3C; font-family: 'Cinzel', serif;">ASSESSMENT LOCKDOWN ACTIVE</h2>
+            <p style="color: #AAA; max-width: 600px; margin: 0 auto;">
+                You scored <strong><%= member.score %>%</strong> (Required passmark is 80%). As per NTI 'Basics First' policy, you must complete 10 days of self-guided English study before attempting the assessment again.
+            </p>
+
+            <h3 class="architect-subtitle" style="margin-top: 2rem;">Time Remaining to Next Attempt</h3>
+
+            <div class="countdown-container">
+                <div class="time-card"><div class="number" id="days">10</div><div class="label">Days</div></div>
+                <div class="time-card"><div class="number" id="hours">00</div><div class="label">Hours</div></div>
+                <div class="time-card"><div class="number" id="mins">00</div><div class="label">Mins</div></div>
+                <div class="time-card"><div class="number" id="secs">00</div><div class="label">Secs</div></div>
+            </div>
+
+            <p style="color: var(--text-gold); font-size: 0.9rem;">
+                Attempting to access the exam before timer reaches zero will keep you locked on this page.
+            </p>
+
+            <a href="/english-test?memberId=<%= member.id %>" class="cta-btn" id="retryBtn" style="display:inline-block; opacity: 0.5; pointer-events: none; margin-top: 1rem;">
+                Retake Assessment (Locked)
+            </a>
+        </div>
+
+        <h3 class="section-title" style="margin-top: 3rem;">Recommended Study Focus Areas</h3>
+        <div class="grid">
+            <div class="card">
+                <h3>1. English Grammar & Syntax</h3>
+                <p>Focus on subject-verb agreement, pronoun usage, and active vs passive sentence construction.</p>
+            </div>
+            <div class="card">
+                <h3>2. Technical Logic & UNIV 1001</h3>
+                <p>Practice reading comprehension, logical deduction, and problem-solving reasoning.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cooldownUntil = new Date("<%= member.cooldownUntil %>").getTime();
+
+        const countdownInterval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = cooldownUntil - now;
+
+            if (distance < 0) {
+                clearInterval(countdownInterval);
+                document.getElementById('days').textContent = '0';
+                document.getElementById('hours').textContent = '00';
+                document.getElementById('mins').textContent = '00';
+                document.getElementById('secs').textContent = '00';
+                
+                const retryBtn = document.getElementById('retryBtn');
+                retryBtn.style.opacity = '1';
+                retryBtn.style.pointerEvents = 'auto';
+                retryBtn.textContent = 'Retake Assessment Now';
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours < 10 ? '0' + hours : hours;
+            document.getElementById('mins').textContent = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('secs').textContent = seconds < 10 ? '0' + seconds : seconds;
+        }, 1000);
+    </script>
+
+    <footer>NAVAKHOLO TERRAHUB INITIATIVE • BUILT IN TERMUX • 2026</footer>
+
+</body>
+</html>

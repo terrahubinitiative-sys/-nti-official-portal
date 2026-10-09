@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETL10 Master Core Access</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <img src="/images/nti.jpg" alt="NTI Logo" class="nti-logo">
+            <div class="org-title">
+                <h1>ETL10 Core Control</h1>
+                <span>System Admins Only</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="form-container" style="max-width: 450px;">
+            <div class="form-header">
+                <h2>System Controller Login</h2>
+                <p>Enter Master Key to access ETL10 Command Center.</p>
+            </div>
+
+            <% if (error) { %>
+                <div class="error-banner"><%= error %></div>
+            <% } %>
+
+            <form action="<%= secretRoute %>/login" method="POST">
+                <div class="form-group">
+                    <label for="masterKey">Master Security Passcode</label>
+                    <input type="password" id="masterKey" name="masterKey" class="form-control" placeholder="Enter ETL10 Passcode" required>
+                </div>
+                <button type="submit" class="submit-btn">Authenticate & Enter</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>NAVAKHOLO TERRAHUB INITIATIVE • BUILT IN TERMUX • 2026</footer>
+
+</body>
+</html>

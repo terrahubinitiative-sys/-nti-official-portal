@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Results • NTI</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <img src="/images/nti.jpg" alt="NTI Logo" class="nti-logo">
+            <div class="org-title">
+                <h1>Assessment Evaluation</h1>
+                <span>Candidate: <%= member.fullName %> (<%= member.id %>)</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <div class="card" style="text-align: center; padding: 2.5rem; margin-bottom: 2rem;">
+            <% if (cheated) { %>
+                <h2 style="color: #E74C3C; font-family: 'Cinzel', serif;">DISQUALIFIED FOR CHEATING</h2>
+                <p style="color: #AAA;">Tab switching violation detected. Score reset to 0%.</p>
+            <% } else if (passed) { %>
+                <h2 style="color: #2ECC71; font-family: 'Cinzel', serif;">CONGRATULATIONS! YOU PASSED!</h2>
+                <p style="font-size: 1.5rem; color: var(--text-gold); font-weight: bold; margin: 1rem 0;"><%= percentage %>% (<%= score %>/15 Correct)</p>
+                <p style="color: #AAA;">You have met the required 80% English & Logic threshold. You are now officially cleared for your chosen track: <strong><%= member.profession %></strong>.</p>
+                <a href="/dashboard" class="cta-btn" style="display:inline-block; margin-top:1rem;">Enter Member Dashboard</a>
+            <% } else { %>
+                <h2 style="color: #E74C3C; font-family: 'Cinzel', serif;">ASSESSMENT NOT PASSED</h2>
+                <p style="font-size: 1.5rem; color: #E74C3C; font-weight: bold; margin: 1rem 0;"><%= percentage %>% (<%= score %>/15 Correct)</p>
+                <p style="color: #AAA;">Minimum required score is 80% (12/15). As per NTI policy, you have been redirected to the <strong>10-Day English Remedial Study Module</strong>.</p>
+                <p style="color: var(--text-gold);">You can retake this assessment after 10 days of guided self-study.</p>
+                <a href="/remedial-hub?memberId=<%= member.id %>" class="cta-btn" style="display:inline-block; margin-top:1rem; background: linear-gradient(90deg, #E74C3C, #F39C12);">Enter 10-Day Remedial Hub</a>
+            <% } %>
+        </div>
+
+        <h3 class="section-title">Detailed Examination Corrections</h3>
+
+        <% questions.forEach((q, idx) => { 
+            const userChoice = userAnswers[q.id] !== undefined ? parseInt(userAnswers[q.id]) : null;
+            const isCorrect = userChoice === q.answer;
+        %>
+            <div class="card" style="margin-bottom: 1rem; border-left: 4px solid <%= isCorrect ? '#2ECC71' : '#E74C3C' %>;">
+                <div style="font-weight: bold; color: var(--text-gold); margin-bottom: 0.5rem;">
+                    Q<%= idx + 1 %>: <%= q.question %>
+                </div>
+                
+                <p style="margin: 0.3rem 0;">Your Answer: 
+                    <span style="color: <%= isCorrect ? '#2ECC71' : '#E74C3C' %>; font-weight: bold;">
+                        <%= userChoice !== null ? q.options[userChoice] : 'Not Answered' %>
+                    </span>
+                </p>
+
+                <% if (!isCorrect) { %>
+                    <p style="margin: 0.3rem 0; color: #2ECC71;">Correct Answer: <strong><%= q.options[q.answer] %></strong></p>
+                <% } %>
+            </div>
+        <% }); %>
+
+    </div>
+
+    <footer>NAVAKHOLO TERRAHUB INITIATIVE • BUILT IN TERMUX • 2026</footer>
+
+</body>
+</html>
